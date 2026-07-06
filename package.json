@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "@ai-sdk/react": "^3.0.87",
-    "@composio/core": "^0.6.3",
+    "@composio/core": "^0.13.1",
     "@composio/vercel": "^0.6.3",
     "@hookform/resolvers": "^5.2.2",
     "@prisma/adapter-pg": "^7.3.0",
