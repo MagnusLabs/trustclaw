@@ -77,13 +77,13 @@ const config = {
   // Transpile packages if needed
   transpilePackages: [],
 
-  // Forzamos a Next.js a ignorar los bloqueos en producción
+  // Strict mode for better debugging
   typescript: {
-    ignoreBuildErrors: true, // <--- Cambiado a true
+    ignoreBuildErrors: false,
   },
 
   eslint: {
-    ignoreDuringBuilds: true, // <--- Cambiado a true
+    ignoreDuringBuilds: false,
   },
 };
 
