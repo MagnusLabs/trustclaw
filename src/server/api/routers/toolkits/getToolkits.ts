@@ -9,8 +9,7 @@ export const getToolkits = protectedProcedure
     const composio = createComposioClient();
     const session = await composio.create(userId, {});
 
-    // 1. Forzamos la ejecución sobre el método esperado por '@composio/vercel'
-    const toolkitsResult = await (session as any).toolkits({
+    const toolkitsResult = await session.toolkits({
       ...(input.search && input.search.length >= 3
         ? { search: input.search }
         : {}),
@@ -21,15 +20,7 @@ export const getToolkits = protectedProcedure
       cursor: input.cursor,
     });
 
-    // Validamos de forma segura de dónde vienen los items
-    const itemsList = toolkitsResult?.items || toolkitsResult?.toolkits || [];
-
-    if (itemsList.length === 0) {
-      return { items: [], nextCursor: null };
-    }
-
-    // 2. Merge and return
-    const items = itemsList.map((toolkit: any) => ({
+    const items = toolkitsResult.items.map((toolkit) => ({
       slug: toolkit.slug,
       name: toolkit.name,
       logo: toolkit.logo ?? `https://logos.composio.dev/api/${toolkit.slug}`,
@@ -39,6 +30,6 @@ export const getToolkits = protectedProcedure
 
     return {
       items,
-      nextCursor: toolkitsResult.nextCursor ?? null,
+      nextCursor: toolkitsResult.cursor ?? null,
     };
   });
