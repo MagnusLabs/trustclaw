@@ -9,7 +9,6 @@ import {
 } from "~/server/clients/redis";
 import { rateLimit } from "~/server/clients/rate-limit";
 import { getStreamContext } from "./stream-store";
-import { TRPCError } from "@trpc/server";
 
 const chatRequestBody = z.object({
   messages: z.array(
@@ -21,10 +20,12 @@ const chatRequestBody = z.object({
   ),
 });
 
-async function getAuthenticatedInstance(request: Request) {
+async function getAuthenticatedInstance(
+  request: Request,
+): Promise<{ userId: string; instanceId: string } | Response> {
   const session = await auth.api.getSession({ headers: request.headers });
   if (!session) {
-    throw new TRPCError({ code: "UNAUTHORIZED" });
+    return new Response("Unauthorized", { status: 401 });
   }
 
   const userId = session.user.id;
@@ -34,7 +35,9 @@ async function getAuthenticatedInstance(request: Request) {
   });
 
   if (!instance) {
-    throw new TRPCError({ code: "NOT_FOUND" });
+    return new Response("No agent instance found for this account", {
+      status: 404,
+    });
   }
 
   return { userId, instanceId: instance.id };
@@ -44,8 +47,8 @@ export const maxDuration = 60;
 
 export async function POST(request: Request) {
   const authResult = await getAuthenticatedInstance(request);
-  if (!authResult) {
-    return new Response("Unauthorized", { status: 401 });
+  if (authResult instanceof Response) {
+    return authResult;
   }
 
   const { instanceId, userId } = authResult;
@@ -125,6 +128,9 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   const authResult = await getAuthenticatedInstance(request);
+  if (authResult instanceof Response) {
+    return authResult;
+  }
 
   const { instanceId } = authResult;
   const url = new URL(request.url);
