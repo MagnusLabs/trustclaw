@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { Virtuoso } from "react-virtuoso";
 import type { VirtuosoHandle } from "react-virtuoso";
 import type { UIMessage } from "@ai-sdk/react";
-import { Loader2, ArrowDown } from "lucide-react";
+import { Loader2, ArrowDown, AlertCircle } from "lucide-react";
 import { ErrorBoundary } from "~/components/core/error-boundary";
 import { Button } from "~/components/ui/button";
 import { useTerminalStore } from "../terminal-store";
@@ -41,7 +41,7 @@ export function ChatView({
   hasOlderMessages,
   isFetchingOlderMessages,
 }: ChatViewProps) {
-  const { sendMessage, stop, messages, status, setMessages } = useChatHook({ initialMessages, streamId });
+  const { sendMessage, stop, messages, status, error, setMessages } = useChatHook({ initialMessages, streamId });
   const terminalOpen = useTerminalStore((s) => s.terminalOpen);
   const setTerminalOpen = useTerminalStore((s) => s.setTerminalOpen);
   const isEmpty = messages.length === 0;
@@ -213,6 +213,14 @@ export function ChatView({
           )}
         </div>
 
+        {error && (
+          <div className="border-border bg-destructive/10 flex items-center gap-2 border-t px-4 py-2 md:px-8">
+            <AlertCircle className="text-destructive size-4 shrink-0" />
+            <p className="text-destructive text-sm">
+              {error.message || "Something went wrong. Please try again."}
+            </p>
+          </div>
+        )}
         <ChatInput onSend={handleSend} onStop={stop} status={status} />
       </div>
 
