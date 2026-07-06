@@ -8,6 +8,7 @@ import {
   getStreamingMessage,
 } from "~/server/clients/redis";
 import { rateLimit } from "~/server/clients/rate-limit";
+import { parseAgentError } from "~/server/api/routers/trustclaw/agent/error-parser";
 import { getStreamContext } from "./stream-store";
 
 const chatRequestBody = z.object({
@@ -89,41 +90,46 @@ export async function POST(request: Request) {
     });
   }
 
-  const prepareResult = await prepareAgentRun({
-    instanceId,
-    userMessage: userText,
-    source: "web",
-  });
+  try {
+    const prepareResult = await prepareAgentRun({
+      instanceId,
+      userMessage: userText,
+      source: "web",
+    });
 
-  const { agent, messages } = prepareResult.result;
+    const { agent, messages } = prepareResult.result;
 
-  const streamId = crypto.randomUUID();
-  await setStreamingMessage(instanceId, streamId);
+    const streamId = crypto.randomUUID();
+    await setStreamingMessage(instanceId, streamId);
 
-  // agent.stream() returns streamText() result - supports toUIMessageStreamResponse
-  // Pass request.signal so the agent stops when the client disconnects (stop button)
-  const result = await agent.stream({
-    prompt: messages,
-    experimental_transform: smoothStream(),
-    abortSignal: request.signal,
-  });
+    // agent.stream() returns streamText() result - supports toUIMessageStreamResponse
+    // Pass request.signal so the agent stops when the client disconnects (stop button)
+    const result = await agent.stream({
+      prompt: messages,
+      experimental_transform: smoothStream(),
+      abortSignal: request.signal,
+    });
 
-  const streamContext = getStreamContext();
-  return result.toUIMessageStreamResponse({
-    headers: {
-      "X-Stream-Id": streamId,
-    },
-    ...(streamContext
-      ? {
-          consumeSseStream: ({ stream }) => {
-            void streamContext.createNewResumableStream(
-              streamId,
-              () => stream,
-            );
-          },
-        }
-      : {}),
-  });
+    const streamContext = getStreamContext();
+    return result.toUIMessageStreamResponse({
+      headers: {
+        "X-Stream-Id": streamId,
+      },
+      ...(streamContext
+        ? {
+            consumeSseStream: ({ stream }) => {
+              void streamContext.createNewResumableStream(
+                streamId,
+                () => stream,
+              );
+            },
+          }
+        : {}),
+    });
+  } catch (error) {
+    console.error("[api/chat] Failed to prepare or start agent stream:", error);
+    return new Response(parseAgentError(error), { status: 500 });
+  }
 }
 
 export async function GET(request: Request) {
