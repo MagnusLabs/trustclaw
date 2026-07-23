@@ -93,10 +93,20 @@ export function Onboarding({
   hasExistingInstance = false,
   savedState,
 }: OnboardingProps) {
-  const initialStep: Step =
+  const savedStep: Step =
     savedState?.currentStep && isValidStep(savedState.currentStep)
       ? savedState.currentStep
       : "name";
+  // Never resume past "model" without a real instance - steps after it
+  // (integrations, telegram) require instanceCreated, which only becomes
+  // true via a live DB check or by actually completing the model step.
+  // Resuming directly into one of them with no instance would render
+  // nothing and leave the wizard stuck (see instanceCreated above).
+  const initialStep: Step =
+    !hasExistingInstance &&
+    STEP_ORDER.indexOf(savedStep) > STEP_ORDER.indexOf("model")
+      ? "model"
+      : savedStep;
 
   const [step, setStep] = useState<Step>(initialStep);
   const [wizardState, setWizardState] = useState<OnboardingWizardState>(() => {
