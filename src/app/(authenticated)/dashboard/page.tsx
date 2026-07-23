@@ -6,6 +6,7 @@ import { OnboardingClient } from "./_components/onboarding/onboarding-client";
 export default async function Page() {
   void trpcServer.api.trustclaw.getHistory.prefetchInfinite({ limit: 10 });
   void trpcServer.api.trustclaw.getStreamingMessage.prefetch();
+  void trpcServer.api.trustclaw.getStatus.prefetch();
 
   const status = await trpcServer.api.trustclaw.getStatus();
 
