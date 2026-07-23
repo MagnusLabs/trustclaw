@@ -157,7 +157,7 @@ export function Onboarding({
 
   const goToStep = (nextStep: Step) => {
     setStep(nextStep);
-    void persistState(nextStep, wizardState);
+    persistState(nextStep, wizardState).catch(showTrpcErrorToast);
   };
 
   const goBack = () => {
@@ -165,7 +165,7 @@ export function Onboarding({
     if (currentIndex > 0) {
       const prevStep = STEP_ORDER[currentIndex - 1]!;
       setStep(prevStep);
-      void persistState(prevStep, wizardState);
+      persistState(prevStep, wizardState).catch(showTrpcErrorToast);
     }
   };
 
