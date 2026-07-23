@@ -119,13 +119,13 @@ export function Onboarding({
     };
   });
 
-  const savedStepIndex =
-    savedState?.currentStep && isValidStep(savedState.currentStep)
-      ? STEP_ORDER.indexOf(savedState.currentStep)
-      : -1;
-  const [instanceCreated, setInstanceCreated] = useState(
-    hasExistingInstance || savedStepIndex > STEP_ORDER.indexOf("model"),
-  );
+  // instanceCreated must reflect whether a composioClawInstance row actually
+  // exists (hasExistingInstance, sourced from a live DB check) - never derive
+  // it from the saved wizard step alone. onboardingState.currentStep can
+  // outlive the instance (e.g. after deleting the instance without resetting
+  // onboarding progress), which would skip createInstance entirely and leave
+  // the wizard looping on later steps with no instance ever created.
+  const [instanceCreated, setInstanceCreated] = useState(hasExistingInstance);
 
   const utils = trpc.useUtils();
 

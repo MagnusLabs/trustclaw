@@ -28,6 +28,9 @@ export const deleteInstance = protectedProcedure.mutation(async ({ ctx }) => {
     await tx.composioClawInstance.delete({
       where: { id: instance.id },
     });
+    await tx.onboardingState.deleteMany({
+      where: { userId },
+    });
 
     return { success: true };
   });
